@@ -6,7 +6,7 @@
  * Cronjob
 
 ## Overview
-OverviewThis project implements a Hexagonal Architecture (also known as Ports and Adapters) to create a modular, testable, and maintainable codebase. The architecture decouples business logic from external systems, allowing flexibility in integrating with various technologies
+This project implements a Hexagonal Architecture (also known as Ports and Adapters) to create a modular, testable, and maintainable codebase. The architecture decouples business logic from external systems, allowing flexibility in integrating with various technologies
 
 
 ## Project setup for backend
