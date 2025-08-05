@@ -17,6 +17,7 @@ let User = class User extends mongoose_2.Document {
     username;
     password;
     wins;
+    loses;
 };
 exports.User = User;
 __decorate([
@@ -34,6 +35,11 @@ __decorate([
     (0, mongoose_1.Prop)({ default: 0 }),
     __metadata("design:type", Number)
 ], User.prototype, "wins", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 0, description: 'Number of losses by the user' }),
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], User.prototype, "loses", void 0);
 exports.User = User = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], User);

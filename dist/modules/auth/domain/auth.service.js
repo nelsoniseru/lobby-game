@@ -42,7 +42,6 @@ let AuthService = class AuthService {
     async login(dto) {
         console.log(dto);
         const user = await this.userRepository.findByUsername(dto.username);
-        console.log(user);
         if (!user) {
             throw new common_1.HttpException('Invalid credentials', common_1.HttpStatus.UNAUTHORIZED);
         }
@@ -55,6 +54,10 @@ let AuthService = class AuthService {
             username: user.username,
         });
         return { token };
+    }
+    async me(id) {
+        const user = await this.userRepository.find(id);
+        return user;
     }
 };
 exports.AuthService = AuthService;

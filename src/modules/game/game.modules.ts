@@ -6,11 +6,11 @@ import { GameService } from './domain/game.service';
 import { GameMongoRepository } from './adapters/game.repository';
 import { GameSessionSchema } from './entity/game.schema';
 import { UserModule } from '../user/user.modules';
+import { PlayerModule } from '../player/player.module';
 import { SessionSchedulerService } from '../game/domain/session-scheduler.service';
 import { SessionGateway } from './adapters/session.gateway';
-import { PlayerRepository } from './adapters/player.repository'
 import { ScheduleModule } from '@nestjs/schedule';
-import { PlayerSchema } from './entity/player.schema'; 
+import { PlayerSchema } from '../player/entity/player.schema'; 
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -20,6 +20,7 @@ import { PlayerSchema } from './entity/player.schema';
     ]),
     ConfigModule,
     UserModule,
+    PlayerModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [GameController],
@@ -28,9 +29,7 @@ import { PlayerSchema } from './entity/player.schema';
     SessionSchedulerService,
     SessionGateway,
     { provide: 'GameRepository', useClass: GameMongoRepository },
-    
-    PlayerRepository
-  ],
+    ],
 })
 export class GameModule {}
 

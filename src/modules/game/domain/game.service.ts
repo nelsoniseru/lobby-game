@@ -2,11 +2,13 @@ import { Inject, Injectable, HttpException, HttpStatus } from '@nestjs/common'; 
 import { v4 as uuidv4 } from 'uuid';
 import type { GameRepository } from '../ports/game.repository';
 import type { UserRepository } from '../../user/adapters/ports/user.repository';
-import { PlayerRepository } from '../adapters/player.repository'
-import { Player } from '../entity/player.schema'
+import type { PlayerRepository } from '../../player/adapters/ports/player.repository';
 import { Logger } from '@nestjs/common';
 import { Connection } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
+import { console } from 'inspector';
+import { Player } from '../../player/entity/player.schema';
+
 @Injectable()
 export class GameService {
   private readonly logger = new Logger(GameService.name);
@@ -15,7 +17,7 @@ export class GameService {
   constructor(
     @Inject('GameRepository') private readonly gameRepository: GameRepository,
     @Inject('UserRepository') private readonly userRepository: UserRepository,
-    private readonly playerRepository: PlayerRepository,
+    @Inject('PlayerRepository') private readonly  playerRepository: PlayerRepository,
     @InjectConnection() private readonly connection: Connection,
     private readonly configService: ConfigService,
   ) {
@@ -45,7 +47,7 @@ export class GameService {
       status: 'active',
       startTime: new Date(),
       duration: sessionDuration * 1000,
-      winningNumber:5,
+      winningNumber:Math.floor(Math.random() * 9) + 1,
     });
     console.log(session)
     this.logger.log(`Session started: ${session.sessionId}`);
@@ -94,10 +96,6 @@ export class GameService {
     }
 
     const result = await this.playerRepository.softDelete({ sessionId, userId });
-    if (result.modifiedCount === 0) {
-      this.logger.warn(`User ${userId} not found in session: ${sessionId}`);
-      throw new HttpException('User not in session', HttpStatus.BAD_REQUEST);
-    }
 
     this.logger.log(`User ${userId} removed from session: ${sessionId}`);
 
@@ -190,39 +188,39 @@ export class GameService {
 
   async getWinners(sessionId: string): Promise<string[]> {
     this.logger.log(`Fetching winners for session: ${sessionId}`);
+    console.log(sessionId)
     const session = await this.gameRepository.findById(sessionId);
-    if (!session || session.status !== 'ended') {
+    if (!session) {
       this.logger.warn(`Session not ended or not found: ${sessionId}`);
       return [];
     }
     const players = await this.playerRepository.find({
       sessionId,
       number: session.winningNumber,
-      deleted: false,
     });
     const userIds = players.map((player) => player.userId);
     const users = await this.userRepository.findByIds(userIds);
+    console.log(users)
     return users.map((user) => user.username);
   }
 
   async getWinCount(sessionId: string): Promise<number> {
     this.logger.log(`Fetching win count for session: ${sessionId}`);
+    console.log(sessionId)
     const session = await this.gameRepository.findById(sessionId);
-    if (!session || session.status !== 'ended') {
+    if (!session) {
       this.logger.warn(`Session not ended or not found: ${sessionId}`);
       return 0;
     }
     return this.playerRepository.count({
       sessionId,
       number: session.winningNumber,
-      deleted: false,
     });
   }
 
   async getUserTotalWins(userId: string): Promise<number> {
     this.logger.log(`Fetching total wins for user: ${userId}`);
     const user = await this.userRepository.find(userId);
-    console.log("=====>", user)
     if (!user) {
       this.logger.warn(`User not found: ${userId}`);
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);

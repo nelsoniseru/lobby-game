@@ -36,6 +36,21 @@ let UserMongoRepository = UserMongoRepository_1 = class UserMongoRepository {
         this.logger.log(`Incrementing wins for user: ${userId}`);
         await this.userModel.updateOne({ _id: userId }, { $inc: { wins: 1 } }).exec();
     }
+    async incrementloses(userId) {
+        this.logger.log(`Incrementing loses for user: ${userId}`);
+        await this.userModel.updateOne({ _id: userId }, { $inc: { loses: 1 } }).exec();
+    }
+    async find(id) {
+        return this.userModel.findById(id).exec();
+    }
+    async findByIds(ids) {
+        this.logger.log(`Finding users by IDs: ${ids.join(', ')}`);
+        return this.userModel.find({ _id: { $in: ids } }).select('username wins loses').lean().exec();
+    }
+    async findById(id) {
+        this.logger.log(`Finding user by ID: ${id}`);
+        return this.userModel.findById(id).select('username wins losses').exec();
+    }
 };
 exports.UserMongoRepository = UserMongoRepository;
 exports.UserMongoRepository = UserMongoRepository = UserMongoRepository_1 = __decorate([

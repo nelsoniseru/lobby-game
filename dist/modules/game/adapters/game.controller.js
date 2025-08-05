@@ -17,12 +17,12 @@ exports.GameController = exports.StandardResponse = void 0;
 const common_1 = require("@nestjs/common");
 const game_service_1 = require("../domain/game.service");
 const jwt_auth_guard_1 = require("../../auth/adapters/jwt-auth.guard");
-const active_session_middleware_1 = require("../../../common/middleware/active-session.middleware");
 const joi_validation_pipe_1 = require("../../../common/pipes/joi-validation.pipe");
 const response_format_1 = require("../../../common/responses/response.format");
 const game_dto_1 = require("../../../common/dto/game.dto");
 const swagger_1 = require("@nestjs/swagger");
 const common_2 = require("@nestjs/common");
+const submitNumber_dto_1 = require("../../../common/dto/submitNumber.dto");
 class StandardResponse {
     status;
     data;
@@ -45,7 +45,7 @@ let GameController = GameController_1 = class GameController {
     async startSession(req) {
         this.logger.log(`User ${req.user.id} starting new session`);
         try {
-            const session = await this.gameService.startSession(req.user.id);
+            const session = await this.gameService.startSession();
             this.logger.log(`Session started: ${session.sessionId}`);
             return response_format_1.ResponseFormat.success(common_1.HttpStatus.CREATED, { session });
         }
@@ -57,7 +57,7 @@ let GameController = GameController_1 = class GameController {
     async joinSession(req, dto) {
         this.logger.log(`User ${req.user.id} joining session: ${dto.sessionId}`);
         try {
-            const session = await this.gameService.joinSession(dto.sessionId, req.user.id, dto.number);
+            const session = await this.gameService.joinSession(dto.sessionId, req.user.id);
             this.logger.log(`User ${req.user.id} joined session: ${dto.sessionId}`);
             return response_format_1.ResponseFormat.success(common_1.HttpStatus.OK, { session });
         }
@@ -78,16 +78,22 @@ let GameController = GameController_1 = class GameController {
             return response_format_1.ResponseFormat.error(common_1.HttpStatus.BAD_REQUEST, error.message);
         }
     }
-    async getLeaderboard() {
-        this.logger.log('Fetching leaderboard');
+    async getLeaderboard(filter = 'all') {
+        this.logger.log(`Fetching leaderboard with filter: ${filter}`);
+        const validFilters = ['all', 'day', 'week', 'month'];
+        if (filter && !validFilters.includes(filter)) {
+            this.logger.warn(`Invalid filter parameter: ${filter}`);
+            return response_format_1.ResponseFormat.error(common_1.HttpStatus.BAD_REQUEST, 'Invalid filter parameter. Use: all, day, week, month');
+        }
         try {
-            const topPlayers = await this.gameService.getTopPlayers(10);
+            const topPlayers = await this.gameService.getTopPlayers(10, filter);
+            console.log(topPlayers);
             this.logger.log('Leaderboard fetched successfully');
-            return response_format_1.ResponseFormat.success(common_1.HttpStatus.OK, { topPlayers });
+            return response_format_1.ResponseFormat.success(common_1.HttpStatus.OK, { topPlayers }, 'Leaderboard retrieved successfully');
         }
         catch (error) {
             this.logger.error(`Failed to fetch leaderboard: ${error.message}`);
-            return response_format_1.ResponseFormat.error(common_1.HttpStatus.BAD_REQUEST, error.message);
+            return response_format_1.ResponseFormat.error(common_1.HttpStatus.INTERNAL_SERVER_ERROR, 'Failed to fetch leaderboard');
         }
     }
     async getSessionsByDate() {
@@ -102,11 +108,23 @@ let GameController = GameController_1 = class GameController {
             return response_format_1.ResponseFormat.error(common_1.HttpStatus.BAD_REQUEST, error.message);
         }
     }
+    async submitNumber(req, dto) {
+        this.logger.log(`User ${req.user.id} submitting number ${dto.number} for session ${dto.sessionId}`);
+        try {
+            const result = await this.gameService.submitPlayerNumber(dto.sessionId, req.user.id, dto.number);
+            this.logger.log(`Submission success for user ${req.user.id} in session ${dto.sessionId}`);
+            return response_format_1.ResponseFormat.success(common_1.HttpStatus.OK, { result });
+        }
+        catch (error) {
+            this.logger.error(`Failed to submit number: ${error.message}`);
+            return response_format_1.ResponseFormat.error(error.status || common_1.HttpStatus.BAD_REQUEST, error.message);
+        }
+    }
 };
 exports.GameController = GameController;
 __decorate([
     (0, common_1.Post)('start'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, active_session_middleware_1.ActiveSessionGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiOperation)({ summary: 'Start a new game session' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Session started successfully', type: (StandardResponse) }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'User already in an active session', type: (StandardResponse) }),
@@ -118,7 +136,7 @@ __decorate([
 ], GameController.prototype, "startSession", null);
 __decorate([
     (0, common_1.Post)('join'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, active_session_middleware_1.ActiveSessionGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiOperation)({ summary: 'Join an existing game session' }),
     (0, swagger_1.ApiBody)({ type: game_dto_1.JoinSessionDto }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Session joined successfully', type: (StandardResponse) }),
@@ -148,10 +166,35 @@ __decorate([
 __decorate([
     (0, common_1.Get)('leaderboard'),
     (0, swagger_1.ApiOperation)({ summary: 'Get top players leaderboard' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Leaderboard retrieved successfully', type: (StandardResponse) }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: (StandardResponse) }),
+    (0, swagger_1.ApiQuery)({
+        name: 'filter',
+        required: false,
+        enum: ['all', 'day', 'week', 'month'],
+        description: 'Filter by time period (default: all)'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Leaderboard retrieved successfully',
+        type: (StandardResponse)
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid filter parameter',
+        type: (StandardResponse)
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Unauthorized',
+        type: (StandardResponse)
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 500,
+        description: 'Internal server error',
+        type: (StandardResponse)
+    }),
+    __param(0, (0, common_1.Query)('filter')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "getLeaderboard", null);
 __decorate([
@@ -163,6 +206,21 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "getSessionsByDate", null);
+__decorate([
+    (0, common_1.Post)('choose-number'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Submit a number for a session by a user' }),
+    (0, swagger_1.ApiBody)({ type: submitNumber_dto_1.SubmitNumberDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Number submitted successfully', type: (StandardResponse) }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input or submission error', type: (StandardResponse) }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Session or user not found', type: (StandardResponse) }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: (StandardResponse) }),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)(new joi_validation_pipe_1.JoiValidationPipe(submitNumber_dto_1.SubmitNumberDtoSchema))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, submitNumber_dto_1.SubmitNumberDto]),
+    __metadata("design:returntype", Promise)
+], GameController.prototype, "submitNumber", null);
 exports.GameController = GameController = GameController_1 = __decorate([
     (0, swagger_1.ApiTags)('game'),
     (0, common_1.Controller)('game'),

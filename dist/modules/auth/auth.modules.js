@@ -15,12 +15,16 @@ const auth_controller_1 = require("./adapters/auth.controller");
 const auth_service_1 = require("./domain/auth.service");
 const user_repository_1 = require("../user/adapters/user.repository");
 const user_schema_1 = require("./entity/user.schema");
+const jwt_strategy_1 = require("./adapters/jwt.strategy");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+            }),
             mongoose_1.MongooseModule.forFeature([{ name: 'User', schema: user_schema_1.UserSchema }]),
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
@@ -35,6 +39,7 @@ exports.AuthModule = AuthModule = __decorate([
         providers: [
             auth_service_1.AuthService,
             { provide: 'UserRepository', useClass: user_repository_1.UserMongoRepository },
+            jwt_strategy_1.JwtStrategy
         ],
         exports: [auth_service_1.AuthService],
     })

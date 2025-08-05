@@ -14,8 +14,8 @@ const swagger_1 = require("@nestjs/swagger");
 class ResponseFormat {
     status;
     data;
-    static success(statusCode, data) {
-        return { status: true, data: { data } };
+    static success(statusCode, data, message) {
+        return { status: true, data: { message, data } };
     }
     static error(statusCode, message, data = null) {
         return { status: false, data: { message, data } };

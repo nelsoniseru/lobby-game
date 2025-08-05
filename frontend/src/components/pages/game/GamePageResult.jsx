@@ -79,12 +79,13 @@ export default function GamePageResult({ sessionId, userId }) {
   };
 
   const sessionSuccessHandler = ({ sessionId: receivedSessionId, activeUsers, winners, playerCount, winCount }) => {
-    if (receivedSessionId === sessionId) {
-      setActiveUsers(activeUsers);
+    console.log(winCount) 
+    console.log(winners) 
+    setActiveUsers(activeUsers);
       setWinners(winners);
       setTotalPlayers(playerCount);
       setTotalWins(winCount);
-    }
+    
   };
 
   const sessionErrorHandler = ({ message }) => {

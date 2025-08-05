@@ -42,62 +42,38 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserResponseDto = exports.LoginResponse = exports.LoginDto = exports.RegisterDto = exports.LoginDtoSchema = exports.RegisterDtoSchema = void 0;
+exports.SubmitNumberResponse = exports.SubmitNumberDto = exports.SubmitNumberDtoSchema = void 0;
 const Joi = __importStar(require("joi"));
 const swagger_1 = require("@nestjs/swagger");
-exports.RegisterDtoSchema = Joi.object({
-    username: Joi.string().min(3).max(30).required(),
-    password: Joi.string().min(6).required(),
+exports.SubmitNumberDtoSchema = Joi.object({
+    sessionId: Joi.string().required(),
+    userId: Joi.string().required(),
+    number: Joi.number().integer().min(1).max(9).required()
 });
-exports.LoginDtoSchema = Joi.object({
-    username: Joi.string().required(),
-    password: Joi.string().required(),
-});
-class RegisterDto {
-    username;
-    password;
+class SubmitNumberDto {
+    sessionId;
+    userId;
+    number;
 }
-exports.RegisterDto = RegisterDto;
+exports.SubmitNumberDto = SubmitNumberDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'gameuser', description: 'The username for registration', minLength: 3, maxLength: 30 }),
+    (0, swagger_1.ApiProperty)({ example: 'abc123-session-id', description: 'ID of the active game session' }),
     __metadata("design:type", String)
-], RegisterDto.prototype, "username", void 0);
+], SubmitNumberDto.prototype, "sessionId", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'password123', description: 'The password for registration', minLength: 6 }),
+    (0, swagger_1.ApiProperty)({ example: 'abc123-session-id', description: 'ID of the user' }),
     __metadata("design:type", String)
-], RegisterDto.prototype, "password", void 0);
-class LoginDto {
-    username;
-    password;
+], SubmitNumberDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 5, description: 'Number picked by the player (1-9)', minimum: 1, maximum: 9 }),
+    __metadata("design:type", Number)
+], SubmitNumberDto.prototype, "number", void 0);
+class SubmitNumberResponse {
+    message;
 }
-exports.LoginDto = LoginDto;
+exports.SubmitNumberResponse = SubmitNumberResponse;
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'gameuser', description: 'The username for login' }),
+    (0, swagger_1.ApiProperty)({ example: 'Number chosen for session.', description: 'Response message after submission' }),
     __metadata("design:type", String)
-], LoginDto.prototype, "username", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'password123', description: 'The password for login' }),
-    __metadata("design:type", String)
-], LoginDto.prototype, "password", void 0);
-class LoginResponse {
-    token;
-}
-exports.LoginResponse = LoginResponse;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'jwt_token_here', description: 'JWT token for authentication' }),
-    __metadata("design:type", String)
-], LoginResponse.prototype, "token", void 0);
-class UserResponseDto {
-    username;
-    id;
-}
-exports.UserResponseDto = UserResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: 'gameuser', description: 'The username of the authenticated user' }),
-    __metadata("design:type", String)
-], UserResponseDto.prototype, "username", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'Unique identifier of the user' }),
-    __metadata("design:type", String)
-], UserResponseDto.prototype, "id", void 0);
-//# sourceMappingURL=auth.dto.js.map
+], SubmitNumberResponse.prototype, "message", void 0);
+//# sourceMappingURL=submitNumber.dto.js.map

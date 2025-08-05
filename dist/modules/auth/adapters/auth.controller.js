@@ -21,6 +21,7 @@ const joi_validation_pipe_1 = require("../../../common/pipes/joi-validation.pipe
 const response_format_1 = require("../../../common/responses/response.format");
 const swagger_1 = require("@nestjs/swagger");
 const common_2 = require("@nestjs/common");
+const jwt_auth_guard_1 = require("./jwt-auth.guard");
 class StandardResponse {
     status;
     data;
@@ -45,7 +46,7 @@ let AuthController = AuthController_1 = class AuthController {
         try {
             const result = await this.authService.register(dto);
             this.logger.log(`Registration successful for username: ${dto.username}`);
-            return response_format_1.ResponseFormat.success(common_1.HttpStatus.CREATED, { token: result.token });
+            return response_format_1.ResponseFormat.success(common_1.HttpStatus.CREATED, { token: result.token }, 'Registration successful');
         }
         catch (error) {
             this.logger.error(`Registration failed: ${error.message}`);
@@ -57,12 +58,22 @@ let AuthController = AuthController_1 = class AuthController {
         try {
             const result = await this.authService.login(dto);
             this.logger.log(`Login successful for username: ${dto.username}`);
-            return response_format_1.ResponseFormat.success(common_1.HttpStatus.OK, { token: result.token });
+            return response_format_1.ResponseFormat.success(common_1.HttpStatus.OK, { token: result.token }, 'Login successful');
         }
         catch (error) {
             this.logger.error(`Login failed: ${error.message}`);
             return response_format_1.ResponseFormat.error(common_1.HttpStatus.UNAUTHORIZED, error.message);
         }
+    }
+    async getUserDetails(req) {
+        const userId = req.user.id;
+        const user = await this.authService.me(userId);
+        if (!user) {
+            this.logger.error(`User not found: ${userId}`);
+            return response_format_1.ResponseFormat.error(common_1.HttpStatus.NOT_FOUND, 'User not found');
+        }
+        this.logger.log(`User details retrieved for user: ${userId}`);
+        return response_format_1.ResponseFormat.success(common_1.HttpStatus.OK, { user }, 'User details retrieved');
     }
 };
 exports.AuthController = AuthController;
@@ -88,6 +99,18 @@ __decorate([
     __metadata("design:paramtypes", [Function]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Get)('me'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get currently authenticated user' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns user details', type: (StandardResponse) }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: (StandardResponse) }),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getUserDetails", null);
 exports.AuthController = AuthController = AuthController_1 = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),

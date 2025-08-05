@@ -15,25 +15,31 @@ const game_service_1 = require("./domain/game.service");
 const game_repository_1 = require("./adapters/game.repository");
 const game_schema_1 = require("./entity/game.schema");
 const user_modules_1 = require("../user/user.modules");
-const active_session_middleware_1 = require("../../common/middleware/active-session.middleware");
+const player_module_1 = require("../player/player.module");
+const session_scheduler_service_1 = require("../game/domain/session-scheduler.service");
+const session_gateway_1 = require("./adapters/session.gateway");
+const schedule_1 = require("@nestjs/schedule");
+const player_schema_1 = require("../player/entity/player.schema");
 let GameModule = class GameModule {
-    configure(consumer) {
-        consumer
-            .apply(active_session_middleware_1.ActiveSessionMiddleware)
-            .forRoutes({ path: 'game/join', method: common_1.RequestMethod.POST }, { path: 'game/start', method: common_1.RequestMethod.POST });
-    }
 };
 exports.GameModule = GameModule;
 exports.GameModule = GameModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([{ name: 'GameSession', schema: game_schema_1.GameSessionSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: 'GameSession', schema: game_schema_1.GameSessionSchema },
+                { name: 'Player', schema: player_schema_1.PlayerSchema },
+            ]),
             config_1.ConfigModule,
             user_modules_1.UserModule,
+            player_module_1.PlayerModule,
+            schedule_1.ScheduleModule.forRoot(),
         ],
         controllers: [game_controller_1.GameController],
         providers: [
             game_service_1.GameService,
+            session_scheduler_service_1.SessionSchedulerService,
+            session_gateway_1.SessionGateway,
             { provide: 'GameRepository', useClass: game_repository_1.GameMongoRepository },
         ],
     })
