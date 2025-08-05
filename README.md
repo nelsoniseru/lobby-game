@@ -5,6 +5,9 @@
  * Mongodb
  * Cronjob
 
+## Overview
+OverviewThis project implements a Hexagonal Architecture (also known as Ports and Adapters) to create a modular, testable, and maintainable codebase. The architecture decouples business logic from external systems, allowing flexibility in integrating with various technologies
+
 
 ## Project setup for backend
 
@@ -12,7 +15,7 @@
 $ npm install
 ```
 
-## Compile and run the project
+## Compile and run the backend project
 
 ```bash
 # development
@@ -31,7 +34,7 @@ $ npm run start:dev
 $ cd frontend
 ```
 
-## Compile and run the project
+## Compile and run the frontend project
 
 ```bash
 # development
