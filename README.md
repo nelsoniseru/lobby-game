@@ -8,6 +8,11 @@
 ## Overview
 This project implements a Hexagonal Architecture (also known as Ports and Adapters) to create a modular, testable, and maintainable codebase. The architecture decouples business logic from external systems, allowing flexibility in integrating with various technologies
 
+## env file
+MONGO_URI=
+JWT_SECRET=
+SESSION_USER_CAP=
+SESSION_DURATION_SECONDS=
 
 ## Project setup for backend
 
