@@ -1,44 +1,57 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Inject, Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { UserRepository } from '../../user/ports/user.repository'; // Use import type for UserRepository
+import type { UserRepository } from '../../user/adapters/ports/user.repository';
 import { RegisterDto, LoginDto } from '../../../common/dto/auth.dto';
 import { hashPassword, comparePassword, generateToken } from '../../../common/helpers/auth.helper';
-import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
-
   constructor(
-    private readonly userRepository: UserRepository,
-    private readonly jwtService: JwtService,
+    @Inject('UserRepository') private readonly userRepository: UserRepository,
+    private readonly jwtService: JwtService
   ) {}
 
   async register(dto: RegisterDto) {
-    this.logger.log(`Registering user: ${dto.username}`);
     const user = await this.userRepository.findByUsername(dto.username);
     if (user) {
-      this.logger.warn(`Username already exists: ${dto.username}`);
       throw new HttpException('Username already exists', HttpStatus.BAD_REQUEST);
     }
-    const hashedPassword = await hashPassword(dto.password);
+
+    const hashed = await hashPassword(dto.password); // 🔁 Using helper
     const newUser = await this.userRepository.create({
       username: dto.username,
-      password: hashedPassword,
-      wins: 0,
+      password: hashed,
     });
-    this.logger.log(`User registered successfully: ${newUser.username}`);
-    return { token: generateToken(this.jwtService, { id: newUser.id, username: newUser.username }) };
+
+    const token = generateToken(this.jwtService, {
+      id: newUser.id,
+      username: newUser.username,
+    });
+
+    return { token };
   }
 
-  async login(dto: LoginDto) {
-    this.logger.log(`Logging in user: ${dto.username}`);
-    const user = await this.userRepository.findByUsername(dto.username);
-    if (!user || !(await comparePassword(dto.password, user.password))) {
-      this.logger.warn(`Invalid credentials for user: ${dto.username}`);
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
-    }
-    this.logger.log(`User logged in successfully: ${user.username}`);
-    return { token: generateToken(this.jwtService, { id: user.id, username: user.username }) };
+async login(dto: LoginDto) {
+console.log(dto)
+  const user = await this.userRepository.findByUsername(dto.username);
+  if (!user) {
+    throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
   }
+
+  const isValid = await comparePassword(dto.password, user.password);
+  if (!isValid) {
+    throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+  }
+
+  const token = generateToken(this.jwtService, {
+    id: user.id,
+    username: user.username,
+  });
+
+  return { token };
+}
+async me(id:string){
+   const user = await this.userRepository.find(id);
+  return user
+}
 }

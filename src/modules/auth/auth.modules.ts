@@ -6,9 +6,12 @@ import { AuthController } from './adapters/auth.controller';
 import { AuthService } from './domain/auth.service';
 import { UserMongoRepository } from '../user/adapters/user.repository';
 import { UserSchema } from './entity/user.schema';
-
+import { JwtStrategy } from './adapters/jwt.strategy';
 @Module({
   imports: [
+       ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -23,6 +26,7 @@ import { UserSchema } from './entity/user.schema';
   providers: [
     AuthService,
     { provide: 'UserRepository', useClass: UserMongoRepository },
+     JwtStrategy
   ],
   exports: [AuthService],
 })
